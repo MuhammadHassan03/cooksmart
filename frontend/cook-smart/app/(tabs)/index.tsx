@@ -1,17 +1,7 @@
-import { Text, View } from "tamagui";
+import HomeScreen from "@/components/screens/(authenticated)/HomeScreen";
 
-export default function HomeScreen() {
+export default function Home() {
   return (
-    <>
-      <View
-        flex={1}
-      >
-        <Text
-          color={'white'}
-        >
-          Helo
-        </Text>
-      </View>
-    </>
+    <HomeScreen/>
   );
 }

@@ -11,7 +11,7 @@ class ApiQueue {
           const result = await call();
           resolve(result);
         } catch (error) {
-          console.error("API call in queue failed:", error);
+          console.error("API call in queue failed:");
           reject(error);
         }
       };

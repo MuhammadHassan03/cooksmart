@@ -1,9 +1,17 @@
-import { Request, Response } from 'express';
-import { AuthService } from '../services/auth.service';
-import { validationResult } from 'express-validator';
+// src/controllers/auth.controller.ts
 
-const authService = new AuthService();
+import { Request, Response } from "express";
+import { validationResult } from "express-validator";
+import {
+  registerUser,
+  loginUser,
+  sendResetPasswordEmail,
+  resetUserPassword,
+  fetchCurrentUser,
+  markUserAsOnboarded,
+} from "../services/auth.service";
 
+// ------------------------ REGISTER ------------------------
 export const register = async (req: Request, res: Response) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -11,67 +19,115 @@ export const register = async (req: Request, res: Response) => {
   }
 
   try {
-    const user = await authService.register(req.body);
-    res.status(201).json({ user });
+    const { email, password, fullName } = req.body;
+    const user = await registerUser(email, password, fullName);
+    return res.status(201).json({ user });
   } catch (error) {
-    res.status(500).json({ error: 'Registration failed', details: (error as Error).message });
+    return res.status(500).json({
+      error: "Registration failed",
+      details: (error as Error).message,
+    });
   }
 };
 
+// ------------------------ LOGIN ------------------------
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    const result = await authService.login(email, password);
-    res.json(result);
+    const { session, user } = await loginUser(email, password);
+
+    return res.json({ session, user });
   } catch (error) {
-    res.status(401).json({ error: 'Login failed', details: (error as Error).message });
+    return res.status(401).json({
+      error: "Login failed",
+      details: (error as Error).message,
+    });
   }
 };
 
+// ------------------------ FORGOT PASSWORD ------------------------
 export const forgotPassword = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
-    await authService.sendPasswordResetEmail(email);
-    res.json({ message: 'Password reset link sent' });
-  } catch (error) {
-    res.status(400).json({ error: 'Failed to send reset link', details: (error as Error).message });
+    await sendResetPasswordEmail(email);
+    return res.status(200).json({ message: "Reset email sent successfully" });
+  } catch (err) {
+    return res.status(500).json({
+      error: "Failed to send reset email",
+      details: (err as Error).message,
+    });
   }
 };
 
+// ------------------------ RESET PASSWORD ------------------------
 export const resetPassword = async (req: Request, res: Response) => {
   try {
-    const { token, newPassword } = req.body;
-    await authService.resetPassword(token, newPassword);
-    res.json({ message: 'Password reset successful' });
-  } catch (error) {
-    res.status(400).json({ error: 'Password reset failed', details: (error as Error).message });
+    const { newPassword } = req.body;
+    await resetUserPassword(newPassword);
+    return res.status(200).json({ message: "Password reset successful" });
+  } catch (err) {
+    return res.status(400).json({
+      message: "Password reset failed",
+      details: (err as Error).message,
+    });
   }
 };
 
-export const googleAuth = async (req: Request, res: Response) => {
-  try {
-    const { idToken } = req.body;
-    // const result = await authService.googleLogin(idToken);
-    // res.json(result);
-  } catch (error) {
-    res.status(400).json({ error: 'Google auth failed', details: (error as Error).message });
-  }
-};
-
+// ------------------------ GET CURRENT USER ------------------------
 export const getCurrentUser = async (req: Request, res: Response) => {
   try {
-    const user = req.user;
-    res.json({ user });
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ error: "No token provided" });
+
+    const user = await fetchCurrentUser(token);
+    return res.json({ user });
   } catch (error) {
-    res.status(400).json({ error: 'Could not fetch user info', details: (error as Error).message });
+    return res.status(400).json({
+      error: "Could not fetch user",
+      details: (error as Error).message,
+    });
   }
 };
 
-export const logout = async (req: Request, res: Response) => {
+// ------------------------ Complete Onboarding ------------------------
+
+export const completeOnboarding = async (req: Request, res: Response) => {
   try {
-    res.clearCookie('token');
-    res.json({ message: 'Logged out successfully' });
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    
+    if (!token) {
+      return res.status(401).json({ error: "Authorization token is missing" });
+    }
+
+    const preferences = req.body.preferences;
+    if (
+      !preferences ||
+      !Array.isArray(preferences.diet) ||
+      !Array.isArray(preferences.allergies) ||
+      !Array.isArray(preferences.cuisines)
+    ) {
+      return res.status(400).json({ error: "Invalid or missing preferences" });
+    }
+
+    await markUserAsOnboarded(req.user.id, preferences);
+
+    return res.status(200).json({ message: "User onboarded successfully" });
   } catch (error) {
-    res.status(400).json({ error: 'Logout failed', details: (error as Error).message });
+    return res.status(500).json({
+      error: "Failed to complete onboarding",
+      details: (error as Error).message,
+    });
   }
+};
+
+// ------------------------ GOOGLE AUTH (TODO) ------------------------
+export const googleAuth = async (_req: Request, res: Response) => {
+  return res
+    .status(501)
+    .json({ message: "Google auth not implemented on backend" });
+};
+
+// ------------------------ LOGOUT ------------------------
+export const logout = async (_req: Request, res: Response) => {
+  return res.status(200).json({ message: "Logged out (client-side only)" });
 };

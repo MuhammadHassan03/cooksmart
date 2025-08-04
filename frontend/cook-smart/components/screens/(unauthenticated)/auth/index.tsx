@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Text, View } from "tamagui";
-import LoginScreen from "./Login";
-import SignupScreen from "./Signup";
+import LoginScreen from "./LoginScreen";
+import SignupScreen from "./SignupScreen";
 
 export const AuthScreen = () => {
   const [isLogin, setIsLogin] = useState(true);

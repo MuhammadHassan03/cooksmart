@@ -1,6 +1,5 @@
 import { apiQueue } from "@/utils/apiQueue";
 import api from "@/services/api";
-import { useEffect, useState } from "react";
 import { useRequest } from "@/hooks/useRequest";
 import { useAuth } from "@/context/AuthContext";
 
@@ -9,50 +8,55 @@ type Credentials = {
   password: string;
 };
 
+type SignupData = {
+  email: string;
+  password: string;
+  fullName: string;
+};
+
 const useAuthentication = () => {
   const { loading, error, success, execute } = useRequest();
-  const { setIsAuthenticated } = useAuth();
+  const { login: loginContext, setIsAuthenticated } = useAuth();
 
   const login = async ({ email, password }: Credentials) => {
-    let credentials = {
-      email,
-      password,
-    };
+    const credentials = { email, password };
     const response = await apiQueue.enqueue(() =>
-      execute(() => api.post("auth/login", credentials).then((res) => res.data))
+      execute(() => api.post("/auth/login", credentials).then((res) => res.data))
     );
 
-    console.log("response", response);
-
-    //  setIsAuthenticated(true);
-  };
-
-  const signup = async ({ email, password }: Credentials) => {
-    try {
-      let credentials = {
-        email,
-        password,
-      };
-
-      const response = await apiQueue.enqueue(() =>
-        execute(() =>
-          api.post("auth/register", credentials).then((res) => res.data)
-        )
-      );
-
-      console.log("response", response);
-    } catch (error) {
-      console.log('Error in Signup Functionality', error)
+    if (response?.session?.access_token) {
+      await loginContext(response.session.access_token, response.user, response.is_onboarded);
     }
   };
 
-  const forgot = async () => {};
+  const signup = async ({ email, password, fullName }: SignupData) => {
+    const payload = { email, password, fullName };
+
+    const response = await apiQueue.enqueue(() =>
+      execute(() => api.post("/auth/register", payload).then((res) => res.data))
+    );
+    console.log('response', response)
+    if (response?.session?.access_token) {
+      await loginContext(response.session.access_token, response.user, response.is_onboarded);
+    }
+  };
+
+  const forgot = async (email: string) => {
+    const response = await apiQueue.enqueue(() =>
+      execute(() => api.post("/auth/forgot-password", { email }).then((res) => res.data))
+    );
+
+    return response;
+  };
+  
 
   return {
     login,
     signup,
     forgot,
     loading,
+    error,
+    success,
   };
 };
 

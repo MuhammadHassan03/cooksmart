@@ -1,15 +1,24 @@
 import { Redirect, Tabs } from "expo-router";
 import React from "react";
 import { Platform, ActivityIndicator } from "react-native";
+import { Feather } from "@expo/vector-icons";
 
-import { IconSymbol } from "@/components/ui/IconSymbol";
-import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { useThemeColors } from "@/hooks/theme/useThemeColors";
 import { useAuth } from "@/context/AuthContext";
+import { ThemedTabbar } from '@/components/ui/reuseable/ThemedTabBar'
+
+// Define tab items in one place
+const tabItems = [
+  { name: "index", title: "Home", icon: "home" },
+  { name: "recipes", title: "Recipes", icon: "book-open" },
+  { name: "scanner", title: "Scanner", icon: "camera" },
+  { name: "waste", title: "Waste", icon: "activity" },
+  { name: "profile", title: "Profile", icon: "user" },
+] as const;
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { scheme: colorScheme } = useThemeColors();
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -22,26 +31,28 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      tabBar={(props) => <ThemedTabbar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: Colors[colorScheme ?? "light"].primary,
         headerShown: false,
-        // tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: { position: "absolute" },
           default: {},
         }),
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
-          ),
-        }}
-      />
+      {tabItems.map((tab) => (
+        <Tabs.Screen
+          key={tab.name}
+          name={tab.name}
+          options={{
+            title: tab.title,
+            tabBarIcon: ({ color, size }) => (
+              <Feather name={tab.icon} size={size ?? 24} color={color} />
+            ),
+          }}
+        />
+      ))}
     </Tabs>
   );
 }

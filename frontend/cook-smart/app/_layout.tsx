@@ -10,10 +10,14 @@ import { Slot } from "expo-router";
 import { ToastProvider, ToastViewport } from "@tamagui/toast";
 import { PortalProvider } from "@tamagui/portal";
 import { ThemedToast } from "@/components/ui/reuseable/ThemedToast";
+import { FreemiumProvider } from "@/context/FreemiumContext";
+import { OnboardingProvider } from "@/context/OnboardingContext";
+import { ScanProvider } from "@/context/ScanContext";
+import { tamaguiConfig } from "@/tamagui.config";
+import { PremiumProvider } from "@/context/PremiumContext";
 
 export default function RootLayout() {
   const scheme = useColorScheme();
-  const config = createTamagui(defaultConfig);
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
@@ -25,17 +29,22 @@ export default function RootLayout() {
   return (
     <PortalProvider>
       <ThemeProvider value={scheme === "dark" ? DarkTheme : LightTheme}>
-        <TamaguiProvider config={config}>
+        <TamaguiProvider config={tamaguiConfig}>
           <ToastProvider
             duration={4000}
-            native
+            // native={false}
             burntOptions={{ preset: "done", from: "bottom" }}
           >
-            <AuthProvider>
-              <Slot />
-              {/* <ToastViewport /> */}
-              <ThemedToast/>
-            </AuthProvider>
+            <PremiumProvider>
+              <AuthProvider>
+                <OnboardingProvider>
+                  <ScanProvider>
+                    <Slot />
+                    <ThemedToast />
+                  </ScanProvider>
+                </OnboardingProvider>
+              </AuthProvider>
+            </PremiumProvider>
           </ToastProvider>
         </TamaguiProvider>
       </ThemeProvider>
