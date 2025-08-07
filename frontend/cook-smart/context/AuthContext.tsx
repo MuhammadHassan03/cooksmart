@@ -51,9 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const restoreSession = async () => {
       const token = await SecureStore.getItemAsync("token");
+      console.log('token', token)
       const storedUser = await SecureStore.getItemAsync("user");
       const onboarded = await SecureStore.getItemAsync("isOnboarded");
-
+      console.log('onboarded', onboarded)
       setIsAuthenticated(!!token);
       setIsOnboarded(onboarded === "true" || false);
 

@@ -22,6 +22,7 @@ export default function AIScannerScreen() {
     handleCapture,
     handleRetake,
     handleDetect,
+    processImage
   } = useCameraScanner();
 
   const {
@@ -49,7 +50,6 @@ export default function AIScannerScreen() {
     );
   }
 
-  const reachedLimit = scansLeft <= 0;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -77,7 +77,7 @@ export default function AIScannerScreen() {
               cameraRef={cameraRef}
             />
             {!isFullScreen && (
-              <ScanHeader scansLeft={scansLeft} fonts={fonts} />
+              <ScanHeader />
             )}
           </>
         )}

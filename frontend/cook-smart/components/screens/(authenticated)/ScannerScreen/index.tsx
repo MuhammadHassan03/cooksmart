@@ -13,9 +13,11 @@ import { useThemeColors } from "@/hooks/theme/useThemeColors";
 import { Camera, Plus, Crown } from "@tamagui/lucide-icons";
 import { useRouter } from "expo-router";
 import { ReusableHeader } from "@/components/ui/reuseable/ThemedHeader";
+import { useScanContext } from "@/context/ScanContext";
 
 export default function CreateScreen() {
   const { colors, fonts } = useThemeColors();
+  const {scansLeft} = useScanContext()
   const router = useRouter();
 
   const handleScan = () => {
@@ -73,7 +75,7 @@ export default function CreateScreen() {
                 </Text>
               </XStack>
               <Text fontSize={12} color={colors.textSecondary}>
-                Includes 3 free scans in trial
+                Includes {scansLeft} free scans in trial
               </Text>
             </XStack>
           </Card>
@@ -92,6 +94,9 @@ export default function CreateScreen() {
               color={colors.text}
               size="$5"
               onPress={handleManualEntry}
+              pressStyle={{
+                backgroundColor: colors.border,
+              }}
             >
               Add Manually
             </Button>

@@ -1,9 +1,12 @@
 import { Text, H4, Paragraph, XStack, YStack } from "tamagui";
 import { Crown } from "@tamagui/lucide-icons";
 import { useThemeColors } from "@/hooks/theme/useThemeColors";
+import { useScanContext } from "@/context/ScanContext";
 
-export function ScanHeader({ scansLeft, fonts }) {
-  const { colors } = useThemeColors();
+export function ScanHeader() {
+    const { scansLeft } = useScanContext()
+
+  const { colors, fonts } = useThemeColors();
 
   return (
     <YStack padding="$4" space="$3">

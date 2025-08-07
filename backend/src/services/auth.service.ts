@@ -43,7 +43,6 @@ export const markUserAsOnboarded = async (
     cuisines: string[]
   }
 ) => {
-  console.log('userId', userId)
   const { error: updateError, data: user_data } = await supabase.auth.admin.updateUserById(userId, {
     user_metadata: {
       is_onboarded: true,
@@ -51,7 +50,6 @@ export const markUserAsOnboarded = async (
     },
   });
 
-  console.log('updateError',updateError, user_data)
 
   if (updateError) throw new Error(updateError.message);
   return true;

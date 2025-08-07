@@ -27,6 +27,7 @@
     "plugins": [
       "expo-router",
       "expo-camera", 
+      "react-native-iap",
       [
         "expo-splash-screen",
         {

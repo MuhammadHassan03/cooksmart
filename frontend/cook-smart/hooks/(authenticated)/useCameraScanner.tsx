@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import { Camera } from "expo-camera";
+import { Camera, useCameraPermissions } from "expo-camera";
+import { apiQueue } from "@/utils/apiQueue";
+import api from "@/services/api";
 
 type UseCameraScannerOptions = {
-  detectionDuration?: number; // default: 2500ms
+  detectionDuration?: number;
   onError?: (error: Error) => void;
 };
 
 export function useCameraScanner(options?: UseCameraScannerOptions) {
   const {
     detectionDuration = 2500,
-    onError = (err) => console.error("CameraScanner Error:", err),
+    onError = (err: Error) => console.error("CameraScanner Error:", err),
   } = options || {};
 
   const cameraRef = useRef<Camera | null>(null);
@@ -24,6 +26,7 @@ export function useCameraScanner(options?: UseCameraScannerOptions) {
       const photo = await cameraRef.current.takePictureAsync();
       setCapturedUri(photo.uri);
       onSuccess?.(photo.uri);
+      return photo.uri;
     } catch (error) {
       onError(error as Error);
     }
@@ -39,9 +42,10 @@ export function useCameraScanner(options?: UseCameraScannerOptions) {
 
   const handleDetect = () => {
     setIsDetecting(true);
-    detectTimeout.current = setTimeout(() => {
-      setIsDetecting(false);
-    }, detectionDuration);
+    // detectTimeout.current = setTimeout(() => {
+    //   setIsDetecting(false);
+    // }, detectionDuration);
+    processImage()
   };
 
   const reset = () => {
@@ -50,6 +54,40 @@ export function useCameraScanner(options?: UseCameraScannerOptions) {
     setIsFullScreen(false);
     if (detectTimeout.current) {
       clearTimeout(detectTimeout.current);
+    }
+  };
+
+  const processImage = async () => {
+    if (!capturedUri) {
+
+      onError(new Error("No image captured"));
+      return null;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("image", {
+        uri: capturedUri,
+        name: "scan.jpg",
+        type: "image/jpeg",
+      } as any);
+
+      console.log('formData', formData)
+
+      const result = await apiQueue.enqueue(() =>
+        api
+          .post("/scanner/process", formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          })
+          .then((res) => res.data)
+      );
+      console.log('result', result)
+      // return result;
+    } catch (error) {
+      onError(error as Error);
+      return null;
     }
   };
 
@@ -72,5 +110,6 @@ export function useCameraScanner(options?: UseCameraScannerOptions) {
     handleRetake,
     handleDetect,
     reset,
+    processImage,
   };
 }

@@ -15,32 +15,45 @@ export const PremiumUpgradeCard = () => {
       <Card
         padding="$5"
         borderRadius="$6"
-        backgroundColor={colors.accentLight}
+        backgroundColor={colors.card}
         borderColor={colors.accent}
         borderWidth={1}
         alignItems="center"
         justifyContent="center"
         elevate
+        gap="$4"
       >
-        <YStack alignItems="center" gap="$3">
-          <Rocket size={20} color={colors.accent} />
+        <YStack alignItems="center" space="$3">
+          <Rocket size={28} color={colors.accent} opacity={0.8} />
 
           <Text
-            fontSize={16}
+            fontSize="$6"
             fontFamily={fonts.bold.fontFamily}
             textAlign="center"
             color={colors.text}
+          >
+            Go Premium
+          </Text>
+
+          <Text
+            fontSize="$4"
+            fontFamily={fonts.medium.fontFamily}
+            textAlign="center"
+            color={colors.text}
+            maxWidth={280}
             lineHeight={22}
           >
-            Unlock Meal Planning, AI Recipes, and more with{" "}
-            <Text color={colors.accent}>Premium</Text>
+            Unlock meal planning, smart AI recipes, and personalized nudges with{" "}
+            <Text color={colors.accent} fontFamily={fonts.bold.fontFamily}>
+              Premium
+            </Text>
           </Text>
 
           <Button
             size="$3"
             backgroundColor={colors.accent}
             color="$white"
-            borderRadius="$4"
+            borderRadius="$10"
             fontFamily={fonts.medium.fontFamily}
             mt="$2"
           >

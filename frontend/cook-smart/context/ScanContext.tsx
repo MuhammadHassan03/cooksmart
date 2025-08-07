@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { Camera, CameraType } from "expo-camera";
+import { Camera, CameraType, useCameraPermissions } from "expo-camera";
 
 interface ScanContextType {
   scansLeft: number;
@@ -27,7 +27,7 @@ export const useScanContext = () => {
 };
 
 export const ScanProvider = ({ children }: { children: ReactNode }) => {
-  const [scansLeft, setScansLeft] = useState(3);
+  const [scansLeft, setScansLeft] = useState(1000);
   const [hasPremium, setHasPremium] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
   const [cameraPermissionGranted, setCameraPermissionGranted] = useState<boolean | null>(null);

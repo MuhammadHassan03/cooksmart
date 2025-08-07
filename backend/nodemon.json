@@ -1,0 +1,4 @@
+{
+  "watch": ["src"],
+  "ignore": ["*.json", "*.jpg", "*.png", "temp-*.json", "uploads/*"]
+}
