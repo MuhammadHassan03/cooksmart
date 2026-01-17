@@ -5,19 +5,23 @@ export const registerUser = async (
   password: string,
   fullName: string
 ) => {
-  const { data, error } = await supabase.auth.admin.createUser({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    user_metadata: {
-      fullName,
-      is_onboarded: false,
+    options: {
+      data: {
+        fullName,
+        is_onboarded: false,
+        email_confirm: true,
+      },
     },
-    email_confirm: true,
   });
+
+  console.log("data", data);
 
   if (error) throw new Error(error.message);
 
-  return data.user;
+  return data;
 };
 
 export const loginUser = async (email: string, password: string) => {
@@ -25,9 +29,15 @@ export const loginUser = async (email: string, password: string) => {
     email,
     password,
   });
-  console.log('data', data?.user?.user_metadata?.is_onboarded)
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (error.message.includes("Email not confirmed")) {
+      return {
+        error: "EMAIL_NOT_CONFIRMED",
+        message: "Please confirm your email address before logging in.",
+      };
+    }
+  }
   return {
     session: data.session,
     user: data.user,
@@ -38,23 +48,22 @@ export const loginUser = async (email: string, password: string) => {
 export const markUserAsOnboarded = async (
   userId: string,
   preferences: {
-    diet: string[],
-    allergies: string[],
-    cuisines: string[]
+    diet: string[];
+    allergies: string[];
+    cuisines: string[];
   }
 ) => {
-  const { error: updateError, data: user_data } = await supabase.auth.admin.updateUserById(userId, {
-    user_metadata: {
-      is_onboarded: true,
-      preferences,
-    },
-  });
-
+  const { error: updateError, data: user_data } =
+    await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: {
+        is_onboarded: true,
+        preferences,
+      },
+    });
 
   if (updateError) throw new Error(updateError.message);
   return true;
 };
-
 
 export const sendResetPasswordEmail = async (email: string) => {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {

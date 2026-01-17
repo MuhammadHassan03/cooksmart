@@ -10,6 +10,7 @@ import {
   fetchCurrentUser,
   markUserAsOnboarded,
 } from "../services/auth.service";
+import { supabase } from "../database/supabase.client";
 
 // ------------------------ REGISTER ------------------------
 export const register = async (req: Request, res: Response) => {
@@ -34,9 +35,13 @@ export const register = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    const { session, user } = await loginUser(email, password);
+    const result = await loginUser(email, password);
 
-    return res.json({ session, user });
+    // if ("error" in result) {
+    //   return res.status(401).json(result);
+    // }
+
+    return res.json(result);
   } catch (error) {
     return res.status(401).json({
       error: "Login failed",
@@ -91,32 +96,64 @@ export const getCurrentUser = async (req: Request, res: Response) => {
 
 // ------------------------ Complete Onboarding ------------------------
 
+// export const completeOnboarding = async (req: Request, res: Response) => {
+//   try {
+//     const token = req.headers.authorization?.replace("Bearer ", "");
+    
+//     if (!token) {
+//       return res.status(401).json({ error: "Authorization token is missing" });
+//     }
+
+//     const preferences = req.body.preferences;
+//     if (
+//       !preferences ||
+//       !Array.isArray(preferences.diet) ||
+//       !Array.isArray(preferences.allergies) ||
+//       !Array.isArray(preferences.cuisines)
+//     ) {
+//       return res.status(400).json({ error: "Invalid or missing preferences" });
+//     }
+
+//     await markUserAsOnboarded(req.user.id, preferences);
+
+//     return res.status(200).json({ message: "User onboarded successfully" });
+//   } catch (error) {
+//     return res.status(500).json({
+//       error: "Failed to complete onboarding",
+//       details: (error as Error).message,
+//     });
+//   }
+// };
+
 export const completeOnboarding = async (req: Request, res: Response) => {
   try {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    
-    if (!token) {
-      return res.status(401).json({ error: "Authorization token is missing" });
+    const userId = req.user.id; // Decoded from JWT via middleware
+    const { preferences } = req.body;
+
+    // 1. Validation (Keep your existing checks)
+    if (!preferences || !Array.isArray(preferences.diet)) {
+      return res.status(400).json({ error: "Invalid preferences" });
     }
 
-    const preferences = req.body.preferences;
-    if (
-      !preferences ||
-      !Array.isArray(preferences.diet) ||
-      !Array.isArray(preferences.allergies) ||
-      !Array.isArray(preferences.cuisines)
-    ) {
-      return res.status(400).json({ error: "Invalid or missing preferences" });
-    }
-
-    await markUserAsOnboarded(req.user.id, preferences);
-
-    return res.status(200).json({ message: "User onboarded successfully" });
-  } catch (error) {
-    return res.status(500).json({
-      error: "Failed to complete onboarding",
-      details: (error as Error).message,
+    // 2. Update Supabase Auth Metadata via Admin
+    // Using admin is correct because it bypasses RLS for sensitive metadata
+    const { data: updatedUser, error } = await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: { 
+        is_onboarded: true, 
+        preferences 
+      },
     });
+
+    if (error) throw error;
+
+    // 3. Return the updated user so the app can sync
+    return res.status(200).json({ 
+      message: "User onboarded successfully",
+      user: updatedUser.user 
+    });
+    
+  } catch (error) {
+    return res.status(500).json({ error: (error as Error).message });
   }
 };
 
