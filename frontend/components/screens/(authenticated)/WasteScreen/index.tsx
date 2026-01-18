@@ -28,7 +28,7 @@ export default function WasteScreen() {
         paddingBottom: tabBarHeight - 30,
       }}
     >
-      <ReusableHeader title="Waste Tracker" showAvatar={false} />
+      {/* <ReusableHeader title="Waste Tracker" showAvatar={false} /> */}
 
       <ScrollView
         contentContainerStyle={{

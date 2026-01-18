@@ -1,8 +1,17 @@
+import React, { useEffect, useMemo } from "react"
 import { CameraView, CameraType } from "expo-camera"
-import { Button, XStack, YStack, Text, View } from "tamagui"
+import { Button, XStack, YStack, Text, View, Circle } from "tamagui"
 import { Maximize, Minimize } from "@tamagui/lucide-icons"
 import { useThemeColors } from "@/hooks/theme/useThemeColors"
-import { useWindowDimensions, StyleSheet } from "react-native"
+import { useWindowDimensions, StyleSheet, ViewStyle } from "react-native"
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming, 
+  withRepeat,
+  withSequence,
+  Easing 
+} from "react-native-reanimated"
 
 interface CameraViewProps {
   isFullScreen: boolean
@@ -11,110 +20,132 @@ interface CameraViewProps {
   cameraRef?: React.RefObject<any>
 }
 
-export function CustomCameraView({
-  isFullScreen,
-  onToggle,
-  facing = "back",
-  cameraRef,
-}: CameraViewProps) {
-  const { colors } = useThemeColors()
-  const { height, width } = useWindowDimensions()
+function FrameCorners({ color }: { color: any }) {
+  const s = 30; const t = 4;
+  return (
+    <>
+      <View position="absolute" top={0} left={0} width={s} height={s} borderTopWidth={t} borderLeftWidth={t} borderColor={color} borderTopLeftRadius={20} />
+      <View position="absolute" top={0} right={0} width={s} height={s} borderTopWidth={t} borderRightWidth={t} borderColor={color} borderTopRightRadius={20} />
+      <View position="absolute" bottom={0} left={0} width={s} height={s} borderBottomWidth={t} borderLeftWidth={t} borderColor={color} borderBottomLeftRadius={20} />
+      <View position="absolute" bottom={0} right={0} width={s} height={s} borderBottomWidth={t} borderRightWidth={t} borderColor={color} borderBottomRightRadius={20} />
+    </>
+  )
+}
 
-  const viewHeight = isFullScreen ? height : height * 0.55
+const FRAME_SIZE = 280
+
+export function CustomCameraView({ isFullScreen, onToggle, facing = "back", cameraRef }: CameraViewProps) {
+  const { colors, isLight } = useThemeColors()
+  const { height: SCREEN_HEIGHT } = useWindowDimensions()
+
+  const translateY = useSharedValue(0)
+  const pulseOpacity = useSharedValue(0.4)
+
+  useEffect(() => {
+    translateY.value = withRepeat(
+      withTiming(FRAME_SIZE - 10, { duration: 2000, easing: Easing.inOut(Easing.sin) }), 
+      -1, 
+      true
+    )
+    pulseOpacity.value = withRepeat(
+      withSequence(withTiming(1, { duration: 800 }), withTiming(0.4, { duration: 800 })), 
+      -1, 
+      true
+    )
+  }, [])
+
+  const lineStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }]
+  }))
+
+  const pulseStyle = useAnimatedStyle(() => ({
+    opacity: pulseOpacity.value
+  }))
+
+  const maskColor = useMemo(() => 
+    isLight ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.7)", 
+  [isLight])
 
   return (
-    <YStack width="100%" overflow="hidden" borderRadius="$4" position="relative">
-      {/* Camera View */}
-      <YStack
-        animation="medium"
-        animateOnly={["height"]}
-        height={viewHeight}
-        width="100%"
-      >
-        <CameraView
-          ref={cameraRef}
-          style={{ flex: 1, width: "100%" }}
-          facing={facing}
-        />
+    <YStack 
+      width="100%" 
+      height={isFullScreen ? SCREEN_HEIGHT : 450} 
+      overflow="hidden" 
+      borderRadius={isFullScreen ? 0 : 30} 
+      backgroundColor="black"
+      animation="bouncy"
+    >
+      <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing={facing} />
 
-        {/* Overlay with circle cutout */}
-        <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, styles.overlay]}>
-          <View style={styles.maskContainer}>
-            <View style={styles.topMask} />
-            <View style={styles.middleRow}>
-              <View style={styles.sideMask} />
-              <View style={styles.transparentCircle} />
-              <View style={styles.sideMask} />
-            </View>
-            <View style={styles.bottomMask} />
-          </View>
+      <View 
+        style={StyleSheet.absoluteFill} 
+        pointerEvents="none" 
+        justifyContent="center" 
+        alignItems="center"
+      >
+        <View 
+          style={StyleSheet.absoluteFill} 
+          backgroundColor={maskColor as any} 
+          opacity={0.6} 
+        />
+        
+        <View width={FRAME_SIZE} height={FRAME_SIZE} position="relative">
+          <FrameCorners color={colors.primary} />
+          
+          <Animated.View style={[{ width: '100%' }, lineStyle]}>
+            <View 
+              height={3} 
+              width="100%" 
+              backgroundColor={colors.primary} 
+              style={{ 
+                shadowColor: String(colors.primary), 
+                shadowRadius: 15, 
+                shadowOpacity: 1, 
+                elevation: 10 
+              } as ViewStyle} 
+            />
+          </Animated.View>
         </View>
 
-        {/* Tip Text */}
-        <YStack
-          position="absolute"
-          bottom="$4"
-          width="100%"
-          alignItems="center"
-          pointerEvents="none"
+        {/* <XStack 
+          marginTop="$6" 
+          paddingHorizontal="$4" 
+          paddingVertical="$2.5" 
+          borderRadius="$10" 
+          backgroundColor={isLight ? "rgba(255,255,255,0.85)" : "rgba(30,30,35,0.85)"} 
+          alignItems="center" 
+          space="$2"
+          borderWidth={1}
+          borderColor={isLight ? "$gray5" : "$gray10"}
         >
-          <Text fontSize={13} color={colors.textSecondary} fontWeight="500">
-            Align ingredients within the circle
+          <Animated.View style={pulseStyle}>
+             <Circle size={8} backgroundColor={colors.primary} />
+          </Animated.View>
+          
+          <Text 
+            color={colors.text} 
+            fontWeight="700" 
+            fontSize={13} 
+            letterSpacing={1}
+          >
+            AI DETECTING...
           </Text>
-        </YStack>
-      </YStack>
+        </XStack> */}
+      </View>
 
-      {/* Toggle Button */}
-      <XStack position="absolute" top="$4" right="$4" zIndex={10}>
+      <XStack position="absolute" top={isFullScreen ? 60 : 20} right={20}>
         <Button
-          icon={isFullScreen ? <Minimize size={16} /> : <Maximize size={16} />}
+          icon={isFullScreen ? <Minimize size={20} /> : <Maximize size={20} />}
           circular
-          size="$3"
+          size="$4"
           backgroundColor={colors.surface}
           onPress={onToggle}
           elevate
           color={colors.text}
+          borderWidth={1}
+          borderColor={colors.border}
         />
       </XStack>
     </YStack>
   )
 }
-
-const CIRCLE_SIZE = 230
-
-const styles = StyleSheet.create({
-  overlay: {
-    backgroundColor: "transparent",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  maskContainer: {
-    flex: 1,
-    width: "100%",
-    alignItems: "center",
-  },
-  topMask: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    width: "100%",
-  },
-  middleRow: {
-    flexDirection: "row",
-  },
-  sideMask: {
-    backgroundColor: "rgba(0,0,0,0.5)",
-    width: (1000 - CIRCLE_SIZE) / 2,
-    height: CIRCLE_SIZE,
-  },
-  transparentCircle: {
-    width: CIRCLE_SIZE,
-    height: CIRCLE_SIZE,
-    borderRadius: CIRCLE_SIZE / 2,
-    backgroundColor: "transparent",
-  },
-  bottomMask: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    width: "100%",
-  },
-})

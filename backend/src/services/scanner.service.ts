@@ -5,22 +5,22 @@ import fs from "fs";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export const scanFridge = async (req: Request, res: Response) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "No file uploaded" });
-  }
-
-  const imageBuffer = fs.readFileSync(req.file.path);
-  const base64Image = imageBuffer.toString("base64");
-
-  const model = genAI.getGenerativeModel({ 
-    model: "gemini-2.5-flash",
-    generationConfig: {
-      responseMimeType: 'application/json',
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
     }
-  
-  });
 
-  const prompt = `
+    const imageBuffer = fs.readFileSync(req.file.path);
+    const base64Image = imageBuffer.toString("base64");
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      generationConfig: {
+        responseMimeType: "application/json",
+      },
+    });
+
+    const prompt = `
   Instruction: You are a professional kitchen inventory assistant. 
   Task: Analyze the image and identify all food items along with their estimated quantities or states.
 
@@ -40,25 +40,28 @@ export const scanFridge = async (req: Request, res: Response) => {
   ]
 `;
 
-  const result = await model.generateContent([
-    prompt,
-    {
-      inlineData: {
-        data: base64Image,
-        mimeType: req.file.mimetype,
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          data: base64Image,
+          mimeType: req.file.mimetype,
+        },
       },
-    },
-  ]);
+    ]);
 
-  const response = await result.response;
-  const text = response.text();
+    const response = await result.response;
+    const text = response.text();
 
-  const cleanJson = text.replace(/```json|```/g, "").trim();
+    const cleanJson = text.replace(/```json|```/g, "").trim();
 
-  const items = JSON.parse(cleanJson);
-  fs.unlinkSync(req.file.path);
-  return res.status(200).json({
-    success: true,
-    items: items,
-  });
+    const items = JSON.parse(cleanJson);
+    fs.unlinkSync(req.file.path);
+    return res.status(200).json({
+      success: true,
+      items: items,
+    });
+  } catch (error) {
+    console.log("Error in Scanning Fridge", error);
+  }
 };

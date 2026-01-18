@@ -57,7 +57,7 @@ export default function RecipeScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, paddingBottom: tabBarHeight - 30 }}>
       {/* Top Header */}
-      <ReusableHeader title="Recipes" />
+      {/* <ReusableHeader title="Recipes" /> */}
 
       {/* Main Scrollable Content */}
       <ScrollView

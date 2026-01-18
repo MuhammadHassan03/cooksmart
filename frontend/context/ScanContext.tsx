@@ -27,7 +27,7 @@ export const useScanContext = () => {
 };
 
 export const ScanProvider = ({ children }: { children: ReactNode }) => {
-  const [scansLeft, setScansLeft] = useState(1000);
+  const [scansLeft, setScansLeft] = useState<number>(10003);
   const [hasPremium, setHasPremium] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
   const [cameraPermissionGranted, setCameraPermissionGranted] = useState<boolean | null>(null);

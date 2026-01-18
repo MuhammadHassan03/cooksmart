@@ -1,36 +1,62 @@
 import { Request, Response } from "express";
 import { supabase } from "../database/supabase.client";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-/**
- * CREATE: Add multiple items (Bulk Insert)
- */
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+const analyzeIngredientsWithAI = async (itemName: string) => {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    
+    // Senior Prompt: AI ko context dena zaroori hy
+    const prompt = `Analyze the food item "${itemName}". 
+    Return ONLY a JSON object with:
+    "category": (one of: Dairy, Meat, Vegetable, Fruit, Bakery, Pantry, Beverage),
+    "expiry_days": (estimated shelf life in days from today).
+    Example: {"category": "Dairy", "expiry_days": 7}`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return JSON.parse(response.text());
+  } catch (error) {
+    console.error("Gemini Error:", error);
+    return { category: "Other", expiry_days: 14 }; // Fallback
+  }
+};
+
 export const saveToInventory = async (req: Request, res: Response) => {
   try {
-    console.log('REQUEST HITT')
     const { items } = req.body;
     const userId = req.user?.id;
 
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
-    if (!items || !Array.isArray(items)) return res.status(400).json({ error: "Invalid items" });
+
+    // AI Analysis in parallel (Senior Performance Trick)
+    const processedItems = await Promise.all(items.map(async (item: any) => {
+      const aiAnalysis = await analyzeIngredientsWithAI(item.name);
+      
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + aiAnalysis.expiry_days);
+
+      return {
+        user_id: userId,
+        name: item.name.trim(),
+        quantity: item.quantity ? parseInt(String(item.quantity).match(/\d+/)?.[0] || "1") : 1,
+        unit: item.unit || "pcs",
+        category: aiAnalysis.category,
+        expiry_date: expiryDate.toISOString().split('T')[0]
+      };
+    }));
 
     const { data, error } = await supabase
-      .from("Inventory")
-      .insert(
-        items.map((item: any) => ({
-          user_id: userId,
-          name: item.name,
-          quantity: String(item.quantity || ""),
-          unit: item.unit || "pcs",
-        }))
-      )
+      .from("pantry_items")
+      .insert(processedItems)
       .select();
-
-      console.log("Inventory items inserted:", data);
 
     if (error) throw error;
     return res.status(201).json({ success: true, data });
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
   }
 };
 
@@ -40,9 +66,9 @@ export const saveToInventory = async (req: Request, res: Response) => {
 export const getInventory = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    
+
     const { data, error } = await supabase
-      .from("Inventory")
+      .from("pantry_items")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
@@ -54,9 +80,6 @@ export const getInventory = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * UPDATE: Update a specific item's quantity or name
- */
 export const updateInventoryItem = async (req: Request, res: Response) => {
   try {
     const { id } = req.params; // Item ID from URL
@@ -64,11 +87,11 @@ export const updateInventoryItem = async (req: Request, res: Response) => {
     const userId = req.user?.id;
 
     const { data, error } = await supabase
-      .from("Inventory")
+      .from("pantry_items")
       .update({
         name: updates.name,
         quantity: String(updates.quantity),
-        unit: updates.unit
+        unit: updates.unit,
       })
       .eq("id", id)
       .eq("user_id", userId)
@@ -90,7 +113,7 @@ export const deleteFromInventory = async (req: Request, res: Response) => {
     const userId = req.user?.id;
 
     const { error } = await supabase
-      .from("Inventory")
+      .from("pantry_items")
       .delete()
       .eq("id", id)
       .eq("user_id", userId);

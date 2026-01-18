@@ -95,6 +95,11 @@ export function useCameraScanner(options?: UseCameraScannerOptions) {
             },
           })
           .then((res) => res.data),
+          {
+            url: "/scanner/process",
+            method: "POST",
+            data: formData,
+          }
       );
       return result;
     } catch (error) {

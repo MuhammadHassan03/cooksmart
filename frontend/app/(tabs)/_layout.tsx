@@ -43,7 +43,9 @@ export default function TabLayout() {
         tabBarStyle: Platform.select({
           ios: { position: "absolute" },
           default: {},
+          android: {backgroundColor: 'transparent'}
         }),
+        
       }}
     >
       {tabItems.map((tab) => (

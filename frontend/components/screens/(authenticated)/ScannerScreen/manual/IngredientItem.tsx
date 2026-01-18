@@ -1,6 +1,8 @@
 import { FC, memo } from "react"
-import { Button, Card, Text, XStack, YStack } from "tamagui"
-import { Trash2, Edit3 } from "@tamagui/lucide-icons"
+import { Button, Text, XStack, YStack, View } from "tamagui"
+import { Trash2, Edit3, PackageOpen } from "@tamagui/lucide-icons"
+import * as Haptics from "expo-haptics";
+import { Platform } from "react-native";
 
 type Ingredient = {
   name: string
@@ -18,10 +20,11 @@ type IngredientItemProps = {
     text: string
     textSecondary: string
     warning: string
+    primary: string
+    border: string
   }
 }
 
-// Wrap in memo to prevent re-renders when typing in the form
 export const IngredientItem: FC<IngredientItemProps> = memo(({
   item,
   index,
@@ -29,50 +32,90 @@ export const IngredientItem: FC<IngredientItemProps> = memo(({
   onDelete,
   colors,
 }) => {
-  return (
-    <Card
-      backgroundColor={colors.surface}
-      bordered
-      padding="$3"
-      borderRadius="$4" // Match the theme's card radius
-      pressStyle={{ scale: 0.98 }} // Haptic feel
-    >
-      <XStack justifyContent="space-between" alignItems="center" space="$2">
-        {/* Text Container - Flex allows it to shrink instead of pushing buttons */}
-        <YStack flex={1}>
-          <Text 
-            color={colors.text} 
-            fontSize={16} 
-            fontWeight="600"
-            numberOfLines={1} // Prevents "blah blah" from breaking the UI
-            ellipsizeMode="tail"
-            textTransform="capitalize"
-          >
-            {item.name}
-          </Text>
-          <Text color={colors.textSecondary} fontSize={13}>
-            {item.quantity} {item.unit}
-          </Text>
-        </YStack>
+  // Safety check to prevent .length error
+  if (!item) return null;
 
-        {/* Action Buttons */}
+  const handleEdit = () => {
+    if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onEdit(index);
+  }
+
+  const handleDelete = () => {
+    if (Platform.OS === 'ios') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    onDelete(index);
+  }
+
+  return (
+    <YStack
+      backgroundColor={colors.surface}
+      borderWidth={1}
+      borderColor={colors.border}
+      paddingVertical="$3"
+      paddingHorizontal="$4"
+      borderRadius="$6"
+      // Card jaisi styling manually
+      shadowColor="#000"
+      shadowOffset={{ width: 0, height: 2 }}
+      shadowOpacity={0.05}
+      shadowRadius={5}
+      elevation={2}
+    >
+      <XStack justifyContent="space-between" alignItems="center" space="$3">
+        
+        {/* Left Section */}
+        <XStack flex={1} ai="center" space="$3">
+          <View 
+            p="$2" 
+            br="$4" 
+            bg={colors.primary + '15'} 
+            ai="center" 
+            jc="center"
+          >
+            <PackageOpen size={18} color={colors.primary} />
+          </View>
+
+          <YStack flex={1} space="$0.5">
+            <Text 
+              color={colors.text} 
+              fontSize={16} 
+              fontWeight="700"
+              numberOfLines={1}
+              textTransform="capitalize"
+            >
+              {item.name || "Unknown Item"}
+            </Text>
+            
+            <XStack>
+              <View bg={colors.border} px="$2" py="$0.5" br="$3">
+                <Text color={colors.textSecondary} fontSize={10} fontWeight="700">
+                  {item.quantity} {(item.unit || "").toUpperCase()}
+                </Text>
+              </View>
+            </XStack>
+          </YStack>
+        </XStack>
+
+        {/* Right Section */}
         <XStack space="$1">
           <Button
-            icon={<Edit3 size={16} color={colors.textSecondary} />}
-            size="$3"
+            icon={<Edit3 size={18} color={colors.textSecondary} />}
+            size="$3.5"
             circular
             chromeless
-            onPress={() => onEdit(index)}
+            onPress={handleEdit}
+            pressStyle={{ scale: 0.8, opacity: 0.7 }}
           />
+          <View width={1} height={15} bg={colors.border} opacity={0.5} alignSelf="center" mx="$1" />
           <Button
-            icon={<Trash2 size={16} color={colors.warning} />}
-            size="$3"
+            icon={<Trash2 size={18} color={colors.warning} />}
+            size="$3.5"
             circular
             chromeless
-            onPress={() => onDelete(index)}
+            onPress={handleDelete}
+            pressStyle={{ scale: 0.8, opacity: 0.7 }}
           />
         </XStack>
       </XStack>
-    </Card>
+    </YStack>
   )
 })

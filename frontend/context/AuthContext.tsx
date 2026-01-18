@@ -12,7 +12,8 @@ import { apiQueue } from "@/utils/apiQueue";
 import * as Linking from "expo-linking";
 import { supabase } from "@/utils/lib/supabase";
 import { userQueries } from "@/database/queries/user.queries";
-import { initDatabase } from "@/database/client";
+import { db, initDatabase } from "@/database/client";
+import { systemQueries } from "@/database/queries/systemQueries";
 
 // Define what the user object will look like
 interface User {
@@ -97,6 +98,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+  // 1. Supabase Auth State Change Listener
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    console.log("Supabase Auth Event:", event);
+
+    if (session?.access_token) {
+      console.log('TOKEN', session.access_token)
+      // JAB BHI TOKEN REFRESH HO: Naya token SecureStore mein save karein
+      // Taake Express Backend wala 'api' hamesha fresh token use kare
+      await SecureStore.setItemAsync("token", session.access_token);
+      
+      // Local state update karein
+      setIsAuthenticated(true);
+      setUser(session.user as any);
+      
+      console.log("Express API token updated after refresh.");
+    } else if (event === 'SIGNED_OUT') {
+      // Safaya karein agar logout ho jaye
+      await SecureStore.deleteItemAsync("token");
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  });
+
+  return () => {
+    subscription.unsubscribe();
+  };
+}, []);
+
+  useEffect(() => {
     const restoreSession = async () => {
       initDatabase();
       console.log("Database initialized successfully");
@@ -175,6 +205,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = login;
 
   const logout = async () => {
+    console.log("Initiating secure logout...");
+    systemQueries.resetDatabase();
     await SecureStore.deleteItemAsync("token");
     await SecureStore.deleteItemAsync("user");
     setIsAuthenticated(false);

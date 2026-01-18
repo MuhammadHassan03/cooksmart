@@ -16,7 +16,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, paddingBottom: tabBarHeight - 30 }}>
       <YStack flex={1}>
-        <ReusableHeader title="My Profile" />
+        {/* <ReusableHeader title="My Profile" /> */}
         <ScrollView
           flex={1}
           paddingBottom={"$13"}
