@@ -1,11 +1,11 @@
 import { Card, Text, Button, YStack } from "tamagui";
 import { useThemeColors } from "@/hooks/theme/useThemeColors";
 import { useRouter } from "expo-router";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/utils/store/useAuthStore";
 
 export default function PremiumBanner() {
   const { colors } = useThemeColors();
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const router = useRouter();
 
   if (user?.isPremium) return null;

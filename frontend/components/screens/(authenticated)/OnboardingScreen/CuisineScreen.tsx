@@ -1,17 +1,9 @@
+import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useThemeColors } from "@/hooks/theme/useThemeColors";
-import { Check } from "@tamagui/lucide-icons";
-import {
-  YStack,
-  XStack,
-  Text,
-  H4,
-  Card,
-  Separator,
-  Checkbox,
-} from "tamagui";
+import { Check, Heart } from "@tamagui/lucide-icons";
+import { YStack, XStack, Text, Card, View, H4 } from "tamagui";
 import StepContainer from "@/components/ui/reuseable/ThemedStepContainer";
 import { CUISINE_OPTIONS } from "@/constants";
 import { useOnboarding } from "@/context/OnboardingContext";
@@ -22,80 +14,85 @@ export default function CuisineScreen() {
   const { selections, toggleSelection, isSelected } = useOnboarding();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <YStack flex={1}>
-        <StepContainer
-          title="Preferred cuisines?"
-          step={3}
-          totalSteps={4}
-          onNext={() => router.push("/onboarding/summary")}
-          disableNext={selections.cuisines.length === 0}
-          showBack
-        >
-          <YStack paddingHorizontal="$4" marginTop="$4" space="$4">
-            <YStack>
-              <H4 color={colors.text} fontFamily={fonts.bold.fontFamily}>
-                Choose what you love
-              </H4>
-              <Text fontSize={14} color={colors.textSecondary}>
-                This helps us suggest meals you'll enjoy
+    <SafeAreaView 
+      style={{ flex: 1, backgroundColor: colors.background }} 
+      edges={["top", "left", "right"]} // Bottom edge StepContainer handle karega
+    >
+      <StepContainer
+        title="Favorite Cuisines"
+        step={3}
+        totalSteps={4}
+        onNext={() => router.push("/onboarding/summary")}
+        disableNext={selections.cuisines.length === 0}
+        showBack
+      >
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <YStack space="$4" paddingBottom="$10">
+            <YStack space="$1">
+              <XStack ai="center" space="$2">
+                <H4 color={colors.text} fontFamily={fonts.bold?.fontFamily} fontSize="$7">
+                  Choose what you love
+                </H4>
+                <Heart size={18} color={colors.primary} fill={colors.primary} />
+              </XStack>
+              <Text fontSize={15} color={colors.textSecondary}>
+                We'll prioritize these in your meal plans.
               </Text>
             </YStack>
 
-            <Card
-              elevate
-              bordered
-              backgroundColor={colors.surface}
-              borderColor={colors.border}
-              padding="$3"
-              space="$2"
-            >
-              {CUISINE_OPTIONS.map((option, index) => {
-                const selectedOption = isSelected("cuisines", option);
+            {/* Grid Layout: 2 items per row */}
+            <XStack fw="wrap" jc="space-between" gap="$3">
+              {CUISINE_OPTIONS.map((option) => {
+                const selected = isSelected("cuisines", option);
 
                 return (
-                  <YStack key={option}>
-                    <Pressable
-                      onPress={() => toggleSelection("cuisines", option)}
-                      accessibilityLabel={`Select ${option} cuisine`}
-                    >
-                      <XStack
-                        justifyContent="space-between"
-                        alignItems="center"
-                        paddingVertical="$2"
-                        paddingHorizontal="$1"
+                  <Card
+                    key={option}
+                    f={1}
+                    fb="45%" // 2 items per row with gap
+                    bordered
+                    borderWidth={selected ? 2 : 1}
+                    borderColor={selected ? colors.primary : colors.border}
+                    backgroundColor={selected ? colors.primary + "10" : colors.surface}
+                    onPress={() => toggleSelection("cuisines", option)}
+                    pressStyle={{ scale: 0.97 }}
+                    animation="quick"
+                    p="$4"
+                    ai="center"
+                    jc="center"
+                    br="$5"
+                    elevation={selected ? 4 : 0}
+                  >
+                    <YStack ai="center" space="$2">
+                      <Text
+                        color={selected ? colors.primary : colors.text}
+                        fontSize={16}
+                        fontWeight={selected ? "700" : "500"}
+                        ta="center"
                       >
-                        <Text
-                          color={colors.text}
-                          fontSize={15}
-                          fontWeight={selectedOption ? "700" : "500"}
+                        {option}
+                      </Text>
+                      
+                      {selected && (
+                        <View 
+                          pos="absolute" 
+                          top={-10} 
+                          right={-10} 
+                          bc={colors.primary} 
+                          br="$10" 
+                          p="$1"
                         >
-                          {option}
-                        </Text>
-
-                        <Checkbox
-                          size="$4"
-                          checked={selectedOption}
-                          onCheckedChange={() => {}}
-                          backgroundColor={colors.surface}
-                        >
-                          <Checkbox.Indicator>
-                            <Check size={16} color={colors.primary} />
-                          </Checkbox.Indicator>
-                        </Checkbox>
-                      </XStack>
-                    </Pressable>
-
-                    {index !== CUISINE_OPTIONS.length - 1 && (
-                      <Separator borderColor={colors.divider} />
-                    )}
-                  </YStack>
+                          <Check size={12} color="white" strokeWidth={4} />
+                        </View>
+                      )}
+                    </YStack>
+                  </Card>
                 );
               })}
-            </Card>
+            </XStack>
           </YStack>
-        </StepContainer>
-      </YStack>
+        </ScrollView>
+      </StepContainer>
     </SafeAreaView>
   );
 }

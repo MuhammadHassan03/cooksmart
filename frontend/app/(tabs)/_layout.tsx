@@ -1,15 +1,14 @@
 import { Redirect, Tabs } from "expo-router";
-import React from "react";
-import { Platform, ActivityIndicator } from "react-native";
+import React, { memo, useMemo } from "react";
+import { Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { View, Spinner } from "tamagui";
 
-import { Colors } from "@/constants/Colors";
 import { useThemeColors } from "@/hooks/theme/useThemeColors";
-import { useAuth } from "@/context/AuthContext";
-import { ThemedTabbar } from '@/components/ui/reuseable/ThemedTabBar'
+import { useAuthStore } from "@/utils/store/useAuthStore";
+import { ThemedTabbar } from '@/components/ui/reuseable/ThemedTabBar';
 
-// Define tab items in one place
-const tabItems = [
+const TAB_ITEMS = [
   { name: "index", title: "Home", icon: "home" },
   { name: "recipes", title: "Recipes", icon: "book-open" },
   { name: "scanner", title: "Scanner", icon: "camera" },
@@ -17,45 +16,47 @@ const tabItems = [
   { name: "profile", title: "Profile", icon: "user" },
 ] as const;
 
-export default function TabLayout() {
-  const { scheme: colorScheme } = useThemeColors();
-  const { isAuthenticated, isLoading, isOnboarded } = useAuth();
+function TabLayout() {
+  const { colors } = useThemeColors();
 
+  // ✅ FIX: Specific selectors use karein taake faltu re-render na ho
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const isOnboarded = useAuthStore((s) => s.isOnboarded);
+
+  // ✅ FIX: TabBar function ko memoize karein
+  const renderTabBar = useMemo(() => (props: any) => <ThemedTabbar {...props} />, []);
+
+  // ✅ FIX: Screen options ko baar baar calculate na karein
+  const screenOptions = useMemo(() => ({
+    headerShown: false,
+    tabBarStyle: Platform.select({
+      ios: { position: "absolute" as const },
+      default: { backgroundColor: colors.background, elevation: 0 },
+    }),
+  }), [colors.background]);
 
   if (isLoading) {
-    return <ActivityIndicator size="large" style={{ flex: 1 }} />;
+    return (
+      <View f={1} jc="center" ai="center" bg="$background">
+        <Spinner size="large" color="$primary" />
+      </View>
+    );
   }
 
-  if (!isAuthenticated) {
-    return <Redirect href="/auth" />;
-  }
-
-  if (isOnboarded === false) {
-    return <Redirect href="/onboarding/diet" />;
-  }
+  if (!isAuthenticated) return <Redirect href="/auth" />;
+  if (!isOnboarded) return <Redirect href="/onboarding/diet" />;
 
   return (
-    <Tabs
-      tabBar={(props) => <ThemedTabbar {...props} />}
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].primary,
-        headerShown: false,
-        tabBarStyle: Platform.select({
-          ios: { position: "absolute" },
-          default: {},
-          android: {backgroundColor: 'transparent'}
-        }),
-        
-      }}
-    >
-      {tabItems.map((tab) => (
+    <Tabs tabBar={renderTabBar} screenOptions={screenOptions}>
+      {TAB_ITEMS.map((tab) => (
         <Tabs.Screen
           key={tab.name}
           name={tab.name}
           options={{
             title: tab.title,
             tabBarIcon: ({ color, size }) => (
-              <Feather name={tab.icon} size={size ?? 24} color={color} />
+              <Feather name={tab.icon as any} size={size ?? 22} color={color} />
             ),
           }}
         />
@@ -63,3 +64,5 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+export default memo(TabLayout);

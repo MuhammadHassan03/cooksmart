@@ -1,9 +1,9 @@
 import { H2, Text, YStack, XStack, Avatar, View } from "tamagui"
-import { useAuth } from "@/context/AuthContext"
+import { useAuthStore } from "@/utils/store/useAuthStore" 
 import { useThemeColors } from "@/hooks/theme/useThemeColors"
 
 export const GreetingSection = () => {
-  const { user } = useAuth()
+  const { user } = useAuthStore()
   const { colors, fonts } = useThemeColors()
 
   // 1. Greeting Logic
@@ -72,7 +72,6 @@ export const GreetingSection = () => {
             src={user?.avatarUrl || `https://ui-avatars.com/api/?name=${user?.fullName || "Chef"}&background=00C38B&color=fff`} 
           />
           <Avatar.Fallback backgroundColor={colors.surface} /> 
-          {/* Fixed: bc -> backgroundColor */}
         </Avatar>
       </View>
     </XStack>

@@ -1,12 +1,12 @@
 import { Button, Card, Text, XStack, YStack } from "tamagui";
 import { useThemeColors } from "@/hooks/theme/useThemeColors";
 import { useRouter } from "expo-router";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/utils/store/useAuthStore";
 import { Zap } from "@tamagui/lucide-icons";
 
 export default function PremiumPromptCard() {
   const { colors } = useThemeColors();
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const router = useRouter();
 
   if (user?.isPremium) return null;

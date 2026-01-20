@@ -1,7 +1,7 @@
 import { apiQueue } from "@/utils/apiQueue";
 import api from "@/services/api";
 import { useRequest } from "@/hooks/useRequest";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthActions } from "@/context/AuthContext";
 import * as Burnt from "burnt";
 import { supabase } from "@/utils/lib/supabase";
 
@@ -18,7 +18,7 @@ type SignupData = {
 
 const useAuthentication = () => {
   const { loading, error, success, execute } = useRequest();
-  const { login: loginContext } = useAuth();
+  const { login: loginContext } = useAuthActions();
   const login = async ({ email, password }: Credentials) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -87,6 +87,8 @@ const useAuthentication = () => {
     return execute(() =>
       api.post("/auth/forgot-password", { email }).then((res) => res.data),
     );
+
+    apiQueue
   };
 
   return {

@@ -13,13 +13,13 @@ import { ReusableHeader } from "@/components/ui/reuseable/ThemedHeader"
 import RecipeCard from "@/components/screens/(authenticated)/ReciepeScreen/RecipeCard"
 import FilterBar from "@/components/screens/(authenticated)/ReciepeScreen/FilterBar"
 import PremiumBanner from "@/components/screens/(authenticated)/ReciepeScreen/PremiumBanner"
-import { useAuth } from "@/context/AuthContext"
+import { useAuthStore } from "@/utils/store/useAuthStore"
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 export default function RecipeScreen() {
   const { colors } = useThemeColors()
-  const { user } = useAuth()
+  const { user } = useAuthStore()
   const [searchQuery, setSearchQuery] = useState("")
   const tabBarHeight = useBottomTabBarHeight()
 

@@ -1,35 +1,36 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/utils/store/useAuthStore";
 import { Redirect, Stack } from "expo-router";
-import { ActivityIndicator, View } from "react-native";
-import * as SecureStore from "expo-secure-store";
+import { ActivityIndicator } from "react-native";
+import { View } from "tamagui";
+import { useThemeColors } from "@/hooks/theme/useThemeColors";
 
 export default function AuthLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
-  const [hasToken, setHasToken] = useState<boolean | null>(null);
+  const { colors } = useThemeColors();
+  
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const isOnboarded = useAuthStore((state) => state.isOnboarded);
 
-  useEffect(() => {
-    const checkToken = async () => {
-      const token = await SecureStore.getItemAsync("token");
-      setHasToken(!!token);
-    };
-
-    checkToken();
-  }, []);
-
-  if (isLoading || hasToken === null) {
+  if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
+      <View flex={1} jc="center" ai="center" bc={colors.background}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
-  if (isAuthenticated && hasToken) {
-    return <Redirect href="/(tabs)" />;
+  if (isAuthenticated) {
+    const targetPath = isOnboarded ? "/(tabs)" : "/onboarding/diet";
+    return <Redirect href={targetPath} />;
   }
 
-  return <Stack screenOptions={{
-    headerShown: false
-  }}/>;
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: "slide_from_right", 
+        contentStyle: { backgroundColor: colors.background }
+      }}
+    />
+  );
 }

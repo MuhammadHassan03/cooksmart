@@ -22,21 +22,30 @@ export const scanFridge = async (req: Request, res: Response) => {
 
     const prompt = `
   Instruction: You are a professional kitchen inventory assistant. 
-  Task: Analyze the image and identify all food items along with their estimated quantities or states.
+  Task: Analyze the image and identify all food items. Provide metadata for each item to help with food waste reduction. [cite: 3, 4, 21]
 
   Guidelines:
-  1. Validation: If the image is not related to food, a fridge, or a pantry, return an empty array [].
-  2. Data Structure: Return ONLY a JSON array of objects with the following keys:
-     - "item": The name of the ingredient (e.g., "Milk").
-     - "quantity": The estimated amount or status (e.g., "Half carton", "3", "Full bottle", "Small piece").
-  3. Logic: If quantity is not clearly visible, use "Some" or "1 unit" as a placeholder.
-  4. Formatting: No markdown, no extra text. ONLY the JSON array.
+  1. Data Structure: Return ONLY a JSON array of objects with these keys:
+     - "name": Standardized ingredient name (e.g., "Full Cream Milk"). [cite: 23]
+     - "quantity": Estimated numeric amount (e.g., "500" or "3"). [cite: 29]
+     - "unit": (e.g., "ml", "g", "units", "liters", "packs"). [cite: 27]
+     - "category": One of: "Vegetables", "Dairy", "Grains", "Meat", "Fruit", "Bakery", "Beverages", "Spices". 
+     - "confidence_score": (0.1 to 1.0) How sure are you about this item?
+     - "estimated_shelf_life": Based on food safety, how many days from today will this item typically last? (Return an integer, e.g., 7). [cite: 33]
+
+  2. Logic: If an item is not 100% clear, use your best judgment based on typical fridge contents. [cite: 21]
+  3. Formatting: No markdown, no extra text. ONLY the JSON array. [cite: 23]
 
   Example Output: 
   [
-    {"item": "Milk", "quantity": "Half bottle"},
-    {"item": "Eggs", "quantity": "6"},
-    {"item": "Spinach", "quantity": "1 bunch"}
+    {
+      "name": "Greek Yogurt",
+      "quantity": "1",
+      "unit": "tub",
+      "category": "Dairy",
+      "confidence_score": 0.95,
+      "estimated_shelf_life": 10
+    }
   ]
 `;
 

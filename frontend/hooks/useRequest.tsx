@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppToast } from "@/hooks/useAppToast";
+import { apiQueue } from "@/utils/apiQueue";
 
 type ToastOptions = {
   success?: string;
@@ -23,6 +24,12 @@ export function useRequest<T = any>(): UseRequestReturn<T> {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const toast = useAppToast();
+
+  apiQueue
+
+  useEffect(() => {
+    console.log('LOADING ', loading)
+  }, [loading])
 
   const execute = async (
     callback: () => Promise<T>,

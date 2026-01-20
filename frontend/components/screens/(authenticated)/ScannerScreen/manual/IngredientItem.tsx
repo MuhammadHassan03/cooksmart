@@ -3,27 +3,8 @@ import { Button, Text, XStack, YStack, View } from "tamagui"
 import { Trash2, Edit3, PackageOpen } from "@tamagui/lucide-icons"
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
+import { IngredientItemProps, Ingredient } from "@/utils/types/inventory";
 
-type Ingredient = {
-  name: string
-  quantity: string
-  unit: string
-}
-
-type IngredientItemProps = {
-  item: Ingredient
-  index: number
-  onEdit: (index: number) => void
-  onDelete: (index: number) => void
-  colors: {
-    surface: string
-    text: string
-    textSecondary: string
-    warning: string
-    primary: string
-    border: string
-  }
-}
 
 export const IngredientItem: FC<IngredientItemProps> = memo(({
   item,

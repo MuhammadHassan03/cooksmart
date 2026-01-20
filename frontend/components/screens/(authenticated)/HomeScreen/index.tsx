@@ -1,6 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScrollView, YStack } from "tamagui";
-import { StatusBar } from "expo-status-bar";
 import { useThemeColors } from "@/hooks/theme/useThemeColors";
 import { GreetingSection } from "@/components/screens/(authenticated)/HomeScreen/GreetingSection";
 import { SmartNudgesSection } from "@/components/screens/(authenticated)/HomeScreen/SmartNudgesSection";

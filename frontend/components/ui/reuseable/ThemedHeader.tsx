@@ -1,6 +1,6 @@
 import React from "react"
 import { XStack, Text, Avatar, View, Button } from "tamagui"
-import { useAuth } from "@/context/AuthContext"
+import { useAuthStore } from "@/utils/store/useAuthStore"
 import { useThemeColors } from "@/hooks/theme/useThemeColors"
 import { useRouter } from "expo-router"
 
@@ -15,7 +15,7 @@ export function ReusableHeader({
   showAvatar = true,
   rightSlot
 }: ReusableHeaderProps) {
-  const { user } = useAuth()
+  const { user } = useAuthStore()
   const { colors } = useThemeColors()
   const router = useRouter()
 

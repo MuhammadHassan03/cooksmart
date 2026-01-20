@@ -1,77 +1,135 @@
-import React from "react";
+import React, { memo, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  YStack,
-  XStack,
-  Text,
-  H4,
-  Switch,
-  Separator,
-  Card,
-} from "tamagui";
+import { YStack, XStack, Text, Button, Card, ScrollView, View, Separator } from "tamagui";
+import { CheckCircle2, Zap, Star, ShieldCheck, Crown } from "@tamagui/lucide-icons";
 import { ReusableHeader } from "@/components/ui/reuseable/ThemedHeader";
 import { useThemeColors } from "@/hooks/theme/useThemeColors";
 
-export default function NotificationSettingsScreen() {
-  const { colors, fonts } = useThemeColors();
+const features = [
+  "Unlimited AI Recipe Scanning",
+  "Advanced Waste Analytics",
+  "Priority Meal Planning",
+  "Exclusive Recipe Marketplace Access",
+  "Ad-free Experience",
+];
 
-  const [mealReminders, setMealReminders] = React.useState(true);
-  const [expiryAlerts, setExpiryAlerts] = React.useState(false);
-  const [recipeSuggestions, setRecipeSuggestions] = React.useState(true);
+export default function SubscriptionScreen() {
+  const { colors, fonts } = useThemeColors();
+  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "yearly">("yearly");
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <YStack flex={1}>
-        <ReusableHeader title="Notifications" showAvatar={false} />
+      <ReusableHeader title="Premium" showAvatar={false} />
 
-        <YStack padding="$4" space="$4" flex={1}>
-          {/* Section Header */}
-          <YStack>
-            <H4 color={colors.text} fontFamily={fonts.bold.fontFamily}>
-              Manage Alerts
-            </H4>
-            <Text fontSize={14} color={colors.textSecondary}>
-              Choose the notifications you want to receive
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <YStack padding="$4" gap="$6" alignItems="center">
+          
+          {/* Header Section */}
+          <YStack ai="center" gap="$2" marginTop="$2">
+            <View backgroundColor="$gold" p="$2" br="$10">
+               <Crown size={32} color="black" />
+            </View>
+            <Text fontSize={28} fontWeight="900" color={colors.text} textAlign="center">
+              Unlock the Full Potential
+            </Text>
+            <Text fontSize={16} color={colors.textSecondary} textAlign="center" px="$4">
+              Join thousands of chefs reducing waste and eating smarter.
             </Text>
           </YStack>
 
-          {/* Notification Toggles in a Card */}
-          <Card
+          {/* Plan Selection */}
+          <XStack backgroundColor={colors.surface} p="$1.5" br="$10" bw={1} boc={colors.border}>
+            <PlanToggle 
+              active={selectedPlan === "monthly"} 
+              label="Monthly" 
+              onPress={() => setSelectedPlan("monthly")} 
+            />
+            <PlanToggle 
+              active={selectedPlan === "yearly"} 
+              label="Yearly" 
+              onPress={() => setSelectedPlan("yearly")} 
+              isBestValue
+            />
+          </XStack>
+
+          {/* Pricing Card */}
+          <Card 
+            width="100%" 
+            p="$6" 
+            br="$8" 
+            bw={2} 
+            boc="$gold" 
+            backgroundColor={colors.card}
             elevate
-            bordered
-            backgroundColor={colors.surface}
-            borderColor={colors.border}
-            padding="$3"
           >
-            <YStack space="$3">
-              <XStack justifyContent="space-between" alignItems="center">
-                <Text color={colors.text} fontSize={15} fontWeight="500">
-                  Meal Prep Reminders
+            <YStack ai="center" gap="$2">
+              <Text fontWeight="800" color={colors.textSecondary} tt="uppercase" lS={1}>
+                {selectedPlan === "yearly" ? "Annual Pro" : "Monthly Pro"}
+              </Text>
+              <XStack ai="flex-end" gap="$1">
+                <Text fontSize={48} fontWeight="900" color={colors.text}>
+                  {selectedPlan === "yearly" ? "$49.99" : "$5.99"}
                 </Text>
-                <Switch size="$3" checked={mealReminders} onCheckedChange={setMealReminders} />
-              </XStack>
-
-              <Separator borderColor={colors.divider} />
-
-              <XStack justifyContent="space-between" alignItems="center">
-                <Text color={colors.text} fontSize={15} fontWeight="500">
-                  Ingredient Expiry Alerts
+                <Text fontSize={18} color={colors.textSecondary} mb="$2">
+                  /{selectedPlan === "yearly" ? "yr" : "mo"}
                 </Text>
-                <Switch size="$3" checked={expiryAlerts} onCheckedChange={setExpiryAlerts} />
               </XStack>
-
-              <Separator borderColor={colors.divider} />
-
-              <XStack justifyContent="space-between" alignItems="center">
-                <Text color={colors.text} fontSize={15} fontWeight="500">
-                  Weekly Recipe Suggestions
-                </Text>
-                <Switch size="$3" checked={recipeSuggestions} onCheckedChange={setRecipeSuggestions} />
-              </XStack>
+              {selectedPlan === "yearly" && (
+                <View bc="$gold" px="$3" py="$1" br="$4">
+                  <Text fontSize={12} fontWeight="900" color="black">SAVE 30%</Text>
+                </View>
+              )}
             </YStack>
+
+            <Separator my="$6" boc={colors.border} />
+
+            {/* Features List */}
+            <YStack gap="$4">
+              {features.map((f) => (
+                <XStack key={f} ai="center" gap="$3">
+                  <CheckCircle2 size={20} color={colors.primary} />
+                  <Text fontSize={15} color={colors.text} fontWeight="500">{f}</Text>
+                </XStack>
+              ))}
+            </YStack>
+
+            <Button
+              mt="$8"
+              size="$5"
+              bc={colors.primary}
+              pressStyle={{ scale: 0.97 }}
+              onPress={() => console.log("Subscribe")}
+            >
+              <Text color="white" fontWeight="800" fontSize={16}>Start My Premium Journey</Text>
+            </Button>
+            
+            <Text textAlign="center" mt="$4" fontSize={12} color={colors.textSecondary}>
+              Cancel anytime. Secure payment via App Store.
+            </Text>
           </Card>
+
         </YStack>
-      </YStack>
+      </ScrollView>
     </SafeAreaView>
   );
 }
+
+// Helper Component for Toggle
+const PlanToggle = ({ active, label, onPress, isBestValue }: any) => {
+  const { colors } = useThemeColors();
+  return (
+    <Button
+      flex={1}
+      bc={active ? colors.card : "transparent"}
+      br="$10"
+      bw={0}
+      h="$3.5"
+      onPress={onPress}
+      pressStyle={{ opacity: 0.8 }}
+    >
+      <Text fontWeight={active ? "800" : "500"} color={active ? colors.text : colors.textSecondary}>
+        {label}
+      </Text>
+    </Button>
+  );
+};
