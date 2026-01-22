@@ -6,14 +6,29 @@ import DailyTipCard from "./DailyTipCard";
 import PremiumPromptCard from "./PremiumPromptCard";
 import SettingsSection from "./SettingsSection";
 import AppFooter from "./AppFooter";
+import { useProfile } from "@/hooks/(authenticated)/useProfile";
+import { useState } from "react";
+import { RefreshControl } from "react-native";
 
 export default function ProfileScreen() {
   const { colors } = useThemeColors();
   const tabBarHeight = useBottomTabBarHeight();
+  const { loading, refresh } = useProfile();
+  const [refreshing, setRefreshing] = useState(false);
 
   return (
     <View f={1} bc={colors.background}>
       <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={async () => {
+              setRefreshing(true);
+              await refresh();
+              setRefreshing(false);
+            }}
+          />
+        }
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ 
           paddingBottom: tabBarHeight + 20, 

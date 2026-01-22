@@ -37,7 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         currentUser.id,
         currentUser.email,
         currentUser.user_metadata?.fullName || "",
-        onboardedFlag
+        onboardedFlag,
+        currentUser.avatar_url || "",
       );
 
       router.replace(onboardedFlag ? "/(tabs)" : "/onboarding/diet");

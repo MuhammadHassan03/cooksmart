@@ -1,45 +1,50 @@
-import { useState, useCallback } from "react";
-import { ScrollView, XStack, Button, Text, YStack, View } from "tamagui";
-import { RefreshControl } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useState, useCallback } from "react";
+import { ScrollView, XStack, Button, Text, YStack, View, H4 } from "tamagui";
+import { RefreshControl, TouchableOpacity } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemeColors } from "@/hooks/theme/useThemeColors";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { Leaf, Share2 } from "@tamagui/lucide-icons";
+import { Leaf, Share2, ChevronLeft } from "@tamagui/lucide-icons";
+import { useRouter } from "expo-router";
 
 // Components Imports
 import WasteSummaryCard from "@/components/screens/(authenticated)/WasteScreen/WasteSummaryCard";
-import CategoryWasteList from "@/components/screens/(authenticated)/WasteScreen/CategoryPieChart"; // Naam update kiya for clarity
+import CategoryWasteList from "@/components/screens/(authenticated)/WasteScreen/CategoryPieChart";
 import WasteLogSection from "@/components/screens/(authenticated)/WasteScreen/WasteLogSection";
 import WeeklyWasteTrendGraph from "@/components/screens/(authenticated)/WasteScreen/WeeklyWasteTrendGraph";
 import ImpactCard from "@/components/screens/(authenticated)/WasteScreen/ImpactCard";
 
 export default function WasteScreen() {
   const { colors } = useThemeColors();
-  const tabBarHeight = useBottomTabBarHeight();
+  const router = useRouter();
+  const insets = useSafeAreaInsets(); // ✅ FIX: Bottom height issue solved
   
-  // 1. States
   const [activeFilter, setActiveFilter] = useState("Month");
   const [refreshing, setRefreshing] = useState(false);
-  const hasData = true; // Backend integration ke waqt isay dynamic karenge
+  const hasData = true;
 
-  // 2. Pull-to-Refresh Logic
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    // Simulate API fetch (2 seconds delay)
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 2000);
+    setTimeout(() => setRefreshing(false), 2000);
   }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <View f={1} bg="$background" style={{ paddingTop: insets.top }}>
       
-      {/* 3. Professional Header */}
+      {/* ✅ 1. Professional Header with Back Button */}
       <XStack jc="space-between" ai="center" px="$4" py="$2">
-        <YStack>
-          <Text fontSize="$7" fontWeight="900" color={colors.text}>Insights</Text>
-          <Text fontSize="$2" color={colors.textSecondary}>Track your kitchen waste</Text>
-        </YStack>
+        <XStack ai="center" gap="$3">
+          <TouchableOpacity 
+            onPress={() => router.back()} 
+            style={{ padding: 8, marginLeft: -8 }}
+          >
+            <ChevronLeft size={24} color={colors.text} />
+          </TouchableOpacity>
+          <YStack>
+            <H4 fontWeight="900" color={colors.text} lineHeight={28}>Insights</H4>
+            <Text fontSize="$2" color={colors.textSecondary}>Waste Analytics</Text>
+          </YStack>
+        </XStack>
+
         <Button 
           size="$3" 
           circular 
@@ -49,14 +54,14 @@ export default function WasteScreen() {
         />
       </XStack>
 
-      {/* 4. Time Range Filter (Sticky-ready) */}
-      <XStack px="$4" py="$3" gap="$2" backgroundColor={colors.background}>
+      {/* 2. Time Range Filter */}
+      <XStack px="$4" py="$3" gap="$2">
         {["Week", "Month", "Year"].map((filter) => (
           <Button
             key={filter}
-            f={1} // Buttons take equal width
+            f={1}
             size="$3"
-            borderRadius="$4"
+            br="$10" // More modern rounded look
             backgroundColor={activeFilter === filter ? colors.primary : colors.surface}
             onPress={() => setActiveFilter(filter)}
             borderWidth={1}
@@ -65,7 +70,6 @@ export default function WasteScreen() {
             <Text 
               color={activeFilter === filter ? "white" : colors.textSecondary} 
               fontWeight="700"
-              fontSize="$3"
             >
               {filter}
             </Text>
@@ -79,46 +83,40 @@ export default function WasteScreen() {
             refreshing={refreshing} 
             onRefresh={onRefresh} 
             tintColor={colors.primary} 
-            colors={[colors.primary]} // Android support
           />
         }
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingTop: 8,
-          paddingBottom: tabBarHeight + 20,
+          // ✅ FIX: Custom padding instead of tabBarHeight
+          paddingBottom: insets.bottom + 40, 
           gap: 20,
         }}
       >
         {!hasData ? (
-          /* Empty State UI */
           <YStack ai="center" jc="center" py="$10" gap="$4" mt="$10">
-            <YStack backgroundColor={colors.primary + "15"} p="$6" borderRadius="$10">
+            <View bg={colors.primary + "15"} p="$6" br="$10">
               <Leaf size={50} color={colors.primary} />
-            </YStack>
+            </View>
             <Text fontSize="$6" fontWeight="800" color={colors.text}>No waste logged yet</Text>
-            <Text textAlign="center" color={colors.textSecondary} px="$6" lineHeight={20}>
-              Your kitchen is looking green! Any food you throw away will show up here as insights.
+            <Text textAlign="center" color={colors.textSecondary} px="$6">
+              Your kitchen is looking green! Any food you throw away will show up here.
             </Text>
           </YStack>
         ) : (
-          /* Main Content */
           <>
             <WasteSummaryCard 
               itemCount={10} 
               estimatedLoss={100.50} 
               label={`This ${activeFilter}'s Waste`} 
             />
-
             <CategoryWasteList />
-            
             <WeeklyWasteTrendGraph />
-            
             <ImpactCard savedEmissions={1.2} savedWater={25} />
-
             <WasteLogSection />
           </>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

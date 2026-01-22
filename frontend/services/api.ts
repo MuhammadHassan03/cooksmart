@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { Platform } from "react-native";
 
 const BASE_URL = Platform.OS === "android" 
-  ? "https://f16541a86cbf.ngrok-free.app/api/v1" 
+  ? "https://06b71db0e55e.ngrok-free.app/api/v1" 
   : "http://localhost:5000/api/v1/";
 
 const api = axios.create({

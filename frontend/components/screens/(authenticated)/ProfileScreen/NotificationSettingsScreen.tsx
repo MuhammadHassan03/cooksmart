@@ -2,7 +2,6 @@ import React, { memo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { YStack, XStack, Text, Switch, Separator, Card, ScrollView } from "tamagui";
 import { BellRing, Hourglass, Sparkles } from "@tamagui/lucide-icons";
-import { ReusableHeader } from "@/components/ui/reuseable/ThemedHeader";
 import { useThemeColors } from "@/hooks/theme/useThemeColors";
 
 // --- Sub-component for Toggle Row ---
@@ -57,7 +56,6 @@ export default function NotificationSettingsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <ReusableHeader title="Notifications" showAvatar={false} />
       
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack padding="$4" gap="$6">

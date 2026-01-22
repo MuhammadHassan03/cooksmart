@@ -1,83 +1,58 @@
-import React from "react"
-import { XStack, Text, Avatar, View, Button } from "tamagui"
-import { useAuthStore } from "@/utils/store/useAuthStore"
-import { useThemeColors } from "@/hooks/theme/useThemeColors"
-import { useRouter } from "expo-router"
+import React from "react";
+import { YStack, XStack, Text, H1, View } from "tamagui";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useThemeColors } from "@/hooks/theme/useThemeColors";
 
-type ReusableHeaderProps = {
-  title?: string
-  showAvatar?: boolean
-  rightSlot?: React.ReactNode
+interface AppHeaderProps {
+  title: string;
+  subtitle?: string;
+  rightElement?: React.ReactNode; // Buttons wagera ke liye
 }
 
-export function ReusableHeader({
-  title = "FridgeChef",
-  showAvatar = true,
-  rightSlot
-}: ReusableHeaderProps) {
-  const { user } = useAuthStore()
-  const { colors } = useThemeColors()
-  const router = useRouter()
-
-  const userInitials = user?.name
-    ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : "C"
+export const AppHeader = ({ title, subtitle, rightElement }: AppHeaderProps) => {
+  const insets = useSafeAreaInsets();
+  const { colors, fonts, isLight } = useThemeColors();
 
   return (
-    <XStack
-      alignItems="center"
-      justifyContent="space-between"
-      paddingHorizontal="$4"
-      paddingTop="$4"
-      paddingBottom="$2"
-      backgroundColor={colors.surface}
-      borderBottomWidth={1}
-      borderColor={colors.border}
+    <YStack
+      bg={isLight ? "white" : "$surface"}
+      borderBottomLeftRadius={35}
+      borderBottomRightRadius={35}
+      pt={insets.top}
+      pb="$5"
+      shadowColor="#000"
+      shadowRadius={15}
+      shadowOpacity={0.05}
+      zIndex={10}
     >
-      <Text
-        fontWeight="800"
-        fontSize={22}
-        color={colors.text}
-        fontFamily="System"
-      >
-        {title}
-      </Text>
-
-      <XStack alignItems="center" gap="$3">
-        {rightSlot}
-
-        {showAvatar && (
-          <Button
-            chromeless
-            circular
-            size="$3"
-            onPress={() => router.push("/(profile)/account")}
-          >
-            <Avatar
-              circular
-              size="$3"
-              backgroundColor={colors.primary}
-              borderColor={colors.border}
-              borderWidth={1}
+      <XStack jc="space-between" ai="center" px="$5" py="$3">
+        <YStack>
+          {subtitle && (
+            <Text
+              color={colors.primary}
+              fontSize={10}
+              fontFamily={fonts.bold.fontFamily}
+              ls={1.5}
+              tt="uppercase"
             >
-              {user?.profileImageUrl ? (
-                <Avatar.Image src={user.profileImageUrl} />
-              ) : (
-                <Avatar.Fallback>
-                  <Text fontWeight="600" color={colors.card}>
-                    {userInitials}
-                  </Text>
-                </Avatar.Fallback>
-              )}
-            </Avatar>
-          </Button>
-        )}
+              {subtitle}
+            </Text>
+          )}
+          <H1
+            fontSize={32}
+            fontFamily={fonts.bold.fontFamily}
+            color={colors.text}
+            ls={-1.5}
+          >
+            {title}
+          </H1>
+        </YStack>
+
+        {/* Right Side Buttons (Share, Plus, etc.) */}
+        <XStack gap="$2">
+          {rightElement}
+        </XStack>
       </XStack>
-    </XStack>
-  )
-}
+    </YStack>
+  );
+};

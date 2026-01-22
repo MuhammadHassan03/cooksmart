@@ -2,29 +2,27 @@ import { Redirect, Tabs } from "expo-router";
 import React, { memo, useMemo } from "react";
 import { Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { View, Spinner } from "tamagui";
 
 import { useThemeColors } from "@/hooks/theme/useThemeColors";
 import { useAuthStore } from "@/utils/store/useAuthStore";
 import { ThemedTabbar } from '@/components/ui/reuseable/ThemedTabBar';
+import { FullScreenLoader } from "@/components/ui/reuseable/ThemedFullScreenLoader";
 
 const TAB_ITEMS = [
   { name: "index", title: "Home", icon: "home" },
   { name: "recipes", title: "Recipes", icon: "book-open" },
   { name: "scanner", title: "Scanner", icon: "camera" },
-  { name: "waste", title: "Waste", icon: "activity" },
+  { name: "planner", title: "Planner", icon: "calendar" },
   { name: "profile", title: "Profile", icon: "user" },
 ] as const;
 
 function TabLayout() {
   const { colors } = useThemeColors();
 
-  // ✅ FIX: Specific selectors use karein taake faltu re-render na ho
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
   const isOnboarded = useAuthStore((s) => s.isOnboarded);
 
-  // ✅ FIX: TabBar function ko memoize karein
   const renderTabBar = useMemo(() => (props: any) => <ThemedTabbar {...props} />, []);
 
   // ✅ FIX: Screen options ko baar baar calculate na karein
@@ -36,13 +34,9 @@ function TabLayout() {
     }),
   }), [colors.background]);
 
-  if (isLoading) {
-    return (
-      <View f={1} jc="center" ai="center" bg="$background">
-        <Spinner size="large" color="$primary" />
-      </View>
-    );
-  }
+if (isLoading) {
+  return <FullScreenLoader />;
+}
 
   if (!isAuthenticated) return <Redirect href="/auth" />;
   if (!isOnboarded) return <Redirect href="/onboarding/diet" />;
